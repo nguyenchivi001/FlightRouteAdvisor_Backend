@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+networkx
+pandas
+numpy
+python-multipart
+pydantic
+scipy
+geopy
+requests
+python-dotenv
