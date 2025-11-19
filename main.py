@@ -16,8 +16,7 @@ Config.ensure_directories()
 # Validate data files
 if not Config.validate_data_files():
     print("\nERROR: Required data files are missing!")
-    print("Please download data files from https://openflights.org/data.html")
-    print("and place them in the backend/data/ folder.\n")
+    print("Please ensure airports.dat and routes.dat are in the backend/data/ folder.\n")
     exit(1)
 
 # Initialize FastAPI app
@@ -69,34 +68,34 @@ async def startup_event():
     print("FLIGHT ROUTE ADVISOR - STARTING UP")
     print("="*80)
     
-    print("\n[1/4] Loading OpenFlights data...")
-    airports_df, routes_df, airlines_df = data_loader.load_all()
-    print(f"      ✓ Loaded {len(airports_df)} airports")
-    print(f"      ✓ Loaded {len(routes_df)} routes")
-    print(f"      ✓ Loaded {len(airlines_df)} airlines")
+    print("\nLoading OpenFlights data...")
+    airports_df, routes_df = data_loader.load_all() 
+    print(f"      Loaded {len(airports_df)} airports")
+    print(f"      Loaded {len(routes_df)} routes")
     
-    print("\n[2/4] Building flight network graph...")
+    print("\nBuilding flight network graph...")
+    # FlightGraph initialization remains the same, only needs airports_df and routes_df
     flight_graph = FlightGraph(airports_df, routes_df)
     
-    print("\n[3/4] Initializing hub analyzer...")
+    print("\nInitializing hub analyzer...")
     hub_analyzer = HubAnalyzer(flight_graph)
     
     stats = flight_graph.get_graph_stats()
-    print("\n[4/4] Graph Statistics:")
-    print(f"      • Airports (nodes): {stats['num_airports']}")
-    print(f"      • Routes (edges): {stats['num_routes']}")
-    print(f"      • Average degree: {stats['avg_degree']}")
-    print(f"      • Is connected: {stats['is_connected']}")
-    print(f"      • Components: {stats['num_components']}")
+    print("\nGraph Statistics:")
+    print(f"      Airports (nodes): {stats['num_airports']}")
+    print(f"      Routes (edges): {stats['num_routes']}")
+    print(f"      Average degree: {stats['avg_degree']}")
+    print(f"      Is connected: {stats['is_connected']}")
+    print(f"      Components: {stats['num_components']}")
     
     # Export to GEXF for Gephi
-    print("\n[5/5] Exporting graph to GEXF format...")
+    print("\n[Exporting graph to GEXF format...")
     gexf_file = Config.GEPHI_DIR / "flight_network.gexf"
     flight_graph.export_to_gexf(str(gexf_file))
     
     print("\n" + "="*80)
-    print(f"✓ API READY - Listening on http://{Config.HOST}:{Config.PORT}")
-    print(f"✓ API Docs available at http://localhost:{Config.PORT}/docs")
+    print(f"API READY - Listening on http://{Config.HOST}:{Config.PORT}")
+    print(f"API Docs available at http://localhost:{Config.PORT}/docs")
     print("="*80 + "\n")
 
 @app.get("/")

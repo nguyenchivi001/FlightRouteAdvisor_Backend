@@ -11,7 +11,6 @@ class DataLoader:
     def __init__(self):
         self.airports_df: Optional[pd.DataFrame] = None
         self.routes_df: Optional[pd.DataFrame] = None
-        self.airlines_df: Optional[pd.DataFrame] = None
     
     def load_airports(self) -> pd.DataFrame:
         """Load airports data from local file"""
@@ -21,7 +20,7 @@ class DataLoader:
         if not Config.AIRPORTS_FILE.exists():
             raise FileNotFoundError(
                 f"Airports file not found at {Config.AIRPORTS_FILE}. "
-                f"Please download from https://openflights.org/data.html"
+                f"Please ensure the file is present in the data folder."
             )
         
         columns = [
@@ -60,7 +59,7 @@ class DataLoader:
         if not Config.ROUTES_FILE.exists():
             raise FileNotFoundError(
                 f"Routes file not found at {Config.ROUTES_FILE}. "
-                f"Please download from https://openflights.org/data.html"
+                f"Please ensure the file is present in the data folder."
             )
         
         columns = [
@@ -98,40 +97,11 @@ class DataLoader:
         print(f"Loaded {len(self.routes_df)} direct routes")
         return self.routes_df
     
-    def load_airlines(self) -> pd.DataFrame:
-        """Load airlines data from local file"""
-        if self.airlines_df is not None:
-            return self.airlines_df
-        
-        if not Config.AIRLINES_FILE.exists():
-            raise FileNotFoundError(
-                f"Airlines file not found at {Config.AIRLINES_FILE}. "
-                f"Please download from https://openflights.org/data.html"
-            )
-        
-        columns = [
-            'airline_id', 'name', 'alias', 'iata', 'icao',
-            'callsign', 'country', 'active'
-        ]
-        
-        print(f"Loading airlines from {Config.AIRLINES_FILE}...")
-        self.airlines_df = pd.read_csv(
-            Config.AIRLINES_FILE,
-            names=columns,
-            na_values=['\\N'],
-            encoding='utf-8',
-            on_bad_lines='skip'
-        )
-        
-        print(f"Loaded {len(self.airlines_df)} airlines")
-        return self.airlines_df
-    
-    def load_all(self) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-        """Load all data from local files"""
+    def load_all(self) -> Tuple[pd.DataFrame, pd.DataFrame]:
+        """Load all data from local files (Airports and Routes)"""
         airports = self.load_airports()
         routes = self.load_routes()
-        airlines = self.load_airlines()
-        return airports, routes, airlines
+        return airports, routes
     
     def get_airport_by_iata(self, iata: str) -> Optional[Dict]:
         """Get airport information by IATA code"""

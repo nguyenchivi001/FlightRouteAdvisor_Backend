@@ -83,7 +83,6 @@ class FlightGraph:
                         'distance': distance,
                         'time_cost': time_cost,
                         'monetary_cost': monetary_cost,
-                        'airline': route['airline']
                     })
             else:
                 self.graph.add_edge(
@@ -91,7 +90,6 @@ class FlightGraph:
                     distance=distance,
                     time_cost=time_cost,
                     monetary_cost=monetary_cost,
-                    airline=route['airline']
                 )
                 edge_count += 1
         
@@ -236,14 +234,13 @@ class FlightGraph:
                 'distance': round(edge_data['distance'], 2),
                 'time': round(edge_data['time_cost'], 2),
                 'cost': round(edge_data['monetary_cost'], 2),
-                'airline': edge_data.get('airline', 'N/A')
             })
         
         # Add transfer times
         transfer_time = 0
         if len(path) > 2:  # Has transfers
             for i in range(1, len(path) - 1):
-                transfer_time += self.get_transfer_time(path[i])
+                transfer_time += self.get_transfer_time(path[i]) 
         
         return {
             'path': path,

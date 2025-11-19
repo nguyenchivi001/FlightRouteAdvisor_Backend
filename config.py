@@ -13,7 +13,6 @@ class Config:
     # Data files (local - no download needed)
     AIRPORTS_FILE = DATA_DIR / "airports.dat"
     ROUTES_FILE = DATA_DIR / "routes.dat"
-    AIRLINES_FILE = DATA_DIR / "airlines.dat"
     
     # Transfer time settings (in minutes)
     MIN_TRANSFER_TIME: int = 60
@@ -60,14 +59,14 @@ class Config:
     @classmethod
     def validate_data_files(cls) -> bool:
         """Check if all required data files exist"""
-        files = [cls.AIRPORTS_FILE, cls.ROUTES_FILE, cls.AIRLINES_FILE]
+        files = [cls.AIRPORTS_FILE, cls.ROUTES_FILE] 
         missing = [f for f in files if not f.exists()]
         
         if missing:
             print("Missing data files:")
             for f in missing:
-                print(f"  - {f}")
-            print("\nPlease download from: https://openflights.org/data.html")
+                print(f"  - {f}")
+            print("\nPlease ensure airports.dat and routes.dat are in the data directory.")
             return False
         
         return True
