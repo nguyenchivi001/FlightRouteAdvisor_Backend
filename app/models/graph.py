@@ -155,25 +155,53 @@ class FlightGraph:
         except nx.NetworkXNoPath:
             return None
     
+    def _fast_search_max_1_stop(
+            self, 
+            source: str, 
+            target: str, 
+            k: int, 
+            cost_type: str, 
+            max_stops: int
+        ) -> List[Dict]:
+        paths = []
+        
+        # 1. 0 stops
+        if max_stops >= 0 and self.graph.has_edge(source, target):
+            path_metrics = self._calculate_path_metrics([source, target])
+            if path_metrics:
+                paths.append(path_metrics)
+            
+        # 2. 1 stop
+        if max_stops >= 1:
+            for hub in self.graph.nodes:
+                if hub == source or hub == target:
+                    continue
+
+                if self.graph.has_edge(source, hub) and self.graph.has_edge(hub, target):
+                    path_metrics = self._calculate_path_metrics([source, hub, target])
+                    if path_metrics:
+                        paths.append(path_metrics)
+        
+        sort_key_map = {
+            'time': 'total_time',
+            'distance': 'total_distance',
+            'cost': 'total_cost'
+        }
+        sort_key = sort_key_map.get(cost_type, 'total_time')
+        
+        paths.sort(key=lambda p: p[sort_key])
+        
+        return paths[:k]
+    
     def find_k_shortest_paths(
         self,
         source: str,
         target: str,
         k: int = 5,
-        cost_type: str = 'time'
+        cost_type: str = 'time',
+        max_stops: Optional[int] = None
     ) -> List[Dict]:
-        """
-        Find k shortest paths between two airports
         
-        Args:
-            source: Source airport IATA code
-            target: Target airport IATA code
-            k: Number of paths to find
-            cost_type: 'time', 'distance', or 'cost'
-            
-        Returns:
-            List of path dictionaries
-        """
         if source not in self.graph or target not in self.graph:
             return []
         
@@ -182,29 +210,43 @@ class FlightGraph:
             'distance': 'distance',
             'cost': 'monetary_cost'
         }
-        weight = weight_map.get(cost_type, 'time_cost')
+        weight_attribute = weight_map.get(cost_type, 'time_cost')
+        
+        
+        if max_stops is not None and max_stops <= 1:
+            return self._fast_search_max_1_stop(source, target, k, cost_type, max_stops)
+
+        paths = []
+
+        if max_stops is None:
+            max_allowed_stops = 4
+        else:
+            max_allowed_stops = max_stops
+        
+        max_path_length = max_allowed_stops + 2
         
         try:
-            paths = []
-            # Use NetworkX's shortest_simple_paths generator
-            for path in nx.shortest_simple_paths(self.graph, source, target, weight=weight):
-                # Check if path exceeds max stops
-                if len(path) - 2 > Config.MAX_STOPS:
+            for path in nx.shortest_simple_paths(self.graph, source, target, weight=weight_attribute):
+                
+                num_stops = len(path) - 2
+
+                if num_stops > max_allowed_stops:
                     continue
                 
-                # Calculate metrics for this path
+                if len(path) > max_path_length:
+                    continue
+
                 path_metrics = self._calculate_path_metrics(path)
                 if path_metrics:
                     paths.append(path_metrics)
                 
-                # Stop when we have k paths
                 if len(paths) >= k:
                     break
-            
-            return paths
-        
+                    
         except nx.NetworkXNoPath:
             return []
+            
+        return paths
     
     def _calculate_path_metrics(self, path: List[str]) -> Dict:
         """

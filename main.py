@@ -211,7 +211,8 @@ async def find_alternative_routes(request: RouteRequest):
         source,
         destination,
         k=request.k_paths,
-        cost_type=request.cost_type
+        cost_type=request.cost_type,
+        max_stops=request.max_stops
     )
     
     if not routes:
