@@ -94,6 +94,12 @@ class FlightGraph:
                 edge_count += 1
         
         print(f"Added {self.graph.number_of_edges()} route edges")
+
+    def _get_country_by_iata(self, iata: str) -> Optional[str]:
+        airport = self.airports_df[self.airports_df['iata'] == iata]
+        if not airport.empty:
+            return airport.iloc[0]['country']
+        return None
     
     def get_transfer_time(self, airport_code: str, is_international: bool = False) -> float:
         """
@@ -250,20 +256,15 @@ class FlightGraph:
     
     def _calculate_path_metrics(self, path: List[str]) -> Dict:
         """
-        Calculate metrics for a given path
-        
-        Args:
-            path: List of airport IATA codes
-            
-        Returns:
-            Dictionary with path metrics
+        Calculate metrics for a given path, including international transfer flag
         """
         total_distance = 0
         total_time = 0
         total_cost = 0
         segments = []
+        transfer_details = {}
         
-        # Calculate metrics for each segment
+        # 1. Calculate metrics for each segment
         for i in range(len(path) - 1):
             edge_data = self.graph[path[i]][path[i + 1]]
             total_distance += edge_data['distance']
@@ -278,11 +279,48 @@ class FlightGraph:
                 'cost': round(edge_data['monetary_cost'], 2),
             })
         
-        # Add transfer times
         transfer_time = 0
-        if len(path) > 2:  # Has transfers
+        if len(path) > 2:
             for i in range(1, len(path) - 1):
-                transfer_time += self.get_transfer_time(path[i]) 
+                prev_iata = path[i-1]
+                hub_iata = path[i]
+                next_iata = path[i+1]
+                
+                country_prev = self._get_country_by_iata(prev_iata)
+                country_hub = self._get_country_by_iata(hub_iata)
+                country_next = self._get_country_by_iata(next_iata)
+
+                is_international = False
+                
+                if country_prev and country_hub and country_next:
+                    if country_prev != country_hub or country_hub != country_next:
+                        is_international = True
+                
+                single_transfer_time = self.get_transfer_time(hub_iata, is_international=is_international)
+            
+                transfer_time += single_transfer_time
+
+                transfer_details[hub_iata] = {
+                    'time': round(single_transfer_time, 2),
+                    'is_international': is_international
+                }
+        
+        path_with_details = []
+        for i, iata in enumerate(path):
+            node_data = self.graph.nodes[iata]
+            
+            detail = {
+                'iata': iata,
+                'name': node_data['name'],
+                'city': node_data['city'],
+                'country': node_data['country'],
+                'latitude': node_data['latitude'],
+                'longitude': node_data['longitude'],
+                'is_start': (i == 0),
+                'is_end': (i == len(path) - 1),
+                'transfer': transfer_details.get(iata, None)
+            }
+            path_with_details.append(detail)
         
         return {
             'path': path,
@@ -292,7 +330,8 @@ class FlightGraph:
             'total_flight_time': round(total_time, 2),
             'total_transfer_time': round(transfer_time, 2),
             'total_time': round(total_time + transfer_time, 2),
-            'total_cost': round(total_cost, 2)
+            'total_cost': round(total_cost, 2),
+            'path_details': path_with_details
         }
     
     def get_graph_stats(self) -> Dict:
