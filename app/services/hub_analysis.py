@@ -27,11 +27,11 @@ class HubAnalyzer:
         print("Calculating centrality metrics...")
         
         # Degree centrality (number of connections)
-        print("  - Degree centrality...")
+        print("  - Degree centrality...")
         degree_centrality = nx.degree_centrality(self.graph)
         
         # Betweenness centrality (how often airport is on shortest paths)
-        print("  - Betweenness centrality...")
+        print("  - Betweenness centrality...")
         betweenness_centrality = nx.betweenness_centrality(
             self.graph, 
             weight='time_cost',
@@ -39,7 +39,7 @@ class HubAnalyzer:
         )
         
         # Closeness centrality (average distance to all other airports)
-        print("  - Closeness centrality...")
+        print("  - Closeness centrality...")
         try:
             closeness_centrality = nx.closeness_centrality(
                 self.graph,
@@ -50,7 +50,7 @@ class HubAnalyzer:
             closeness_centrality = {}
         
         # PageRank (importance based on connections)
-        print("  - PageRank...")
+        print("  - PageRank...")
         pagerank = nx.pagerank(self.graph, weight='time_cost')
         
         # Combine all metrics
@@ -141,7 +141,7 @@ class HubAnalyzer:
                 temp_graph, source, target, weight='time_cost'
             )
             
-            # Calculate metrics for alternative path
+            # Calculate metrics for alternative path (Manual calculation adapted from FlightGraph)
             total_distance = 0
             total_time = 0
             total_cost = 0
@@ -159,12 +159,15 @@ class HubAnalyzer:
                     'distance': round(edge_data['distance'], 2),
                     'time': round(edge_data['time_cost'], 2),
                     'cost': round(edge_data['monetary_cost'], 2),
-                    'airline': edge_data.get('airline', 'N/A')
                 })
             
             # Add transfer time
             transfer_time = 0
             if len(alt_path_nodes) > 2:
+                # Use flight_graph's method for calculating transfer time if possible, 
+                # but for simplicity in this manual loop, we use the default calculation 
+                # previously provided, or a simplified version.
+                # Assuming Config.DEFAULT_TRANSFER_TIME is used for all intermediate stops.
                 transfer_time = (len(alt_path_nodes) - 2) * (Config.DEFAULT_TRANSFER_TIME / 60.0)
             
             alternative_path = {
