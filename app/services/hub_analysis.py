@@ -141,45 +141,14 @@ class HubAnalyzer:
                 temp_graph, source, target, weight='time_cost'
             )
             
-            # Calculate metrics for alternative path (Manual calculation adapted from FlightGraph)
-            total_distance = 0
-            total_time = 0
-            total_cost = 0
-            segments = []
+            temp_fg = self.flight_graph
             
-            for i in range(len(alt_path_nodes) - 1):
-                edge_data = temp_graph[alt_path_nodes[i]][alt_path_nodes[i + 1]]
-                total_distance += edge_data['distance']
-                total_time += edge_data['time_cost']
-                total_cost += edge_data['monetary_cost']
-                
-                segments.append({
-                    'from': alt_path_nodes[i],
-                    'to': alt_path_nodes[i + 1],
-                    'distance': round(edge_data['distance'], 2),
-                    'time': round(edge_data['time_cost'], 2),
-                    'cost': round(edge_data['monetary_cost'], 2),
-                })
+            original_graph = temp_fg.graph
+            temp_fg.graph = temp_graph
             
-            # Add transfer time
-            transfer_time = 0
-            if len(alt_path_nodes) > 2:
-                # Use flight_graph's method for calculating transfer time if possible, 
-                # but for simplicity in this manual loop, we use the default calculation 
-                # previously provided, or a simplified version.
-                # Assuming Config.DEFAULT_TRANSFER_TIME is used for all intermediate stops.
-                transfer_time = (len(alt_path_nodes) - 2) * (Config.DEFAULT_TRANSFER_TIME / 60.0)
+            alternative_path = temp_fg._calculate_path_metrics(alt_path_nodes)
             
-            alternative_path = {
-                'path': alt_path_nodes,
-                'segments': segments,
-                'stops': len(alt_path_nodes) - 2,
-                'total_distance': round(total_distance, 2),
-                'total_flight_time': round(total_time, 2),
-                'total_transfer_time': round(transfer_time, 2),
-                'total_time': round(total_time + transfer_time, 2),
-                'total_cost': round(total_cost, 2)
-            }
+            temp_fg.graph = original_graph
         
         except nx.NetworkXNoPath:
             alternative_path = None
@@ -227,6 +196,8 @@ class HubAnalyzer:
             List of alternative hub options
         """
         alternatives = []
+        country_source = self.flight_graph._get_country_by_iata(source)
+        country_target = self.flight_graph._get_country_by_iata(target)
         
         # Get all possible 2-stop paths (source -> hub -> target)
         for potential_hub in self.graph.nodes():
@@ -239,6 +210,18 @@ class HubAnalyzer:
                     self.graph.has_edge(potential_hub, target)):
                 continue
             
+            country_hub = self.flight_graph._get_country_by_iata(potential_hub)
+            
+            is_international = False
+            if country_source and country_hub and country_target:
+                if country_source != country_hub or country_hub != country_target:
+                    is_international = True
+            
+            transfer_time_hub = self.flight_graph.get_transfer_time(
+                potential_hub, 
+                is_international=is_international
+            )
+
             # Calculate total cost via this hub
             src_to_hub = self.graph[source][potential_hub]
             hub_to_dst = self.graph[potential_hub][target]
@@ -246,7 +229,7 @@ class HubAnalyzer:
             total_time = (
                 src_to_hub['time_cost'] + 
                 hub_to_dst['time_cost'] + 
-                (Config.DEFAULT_TRANSFER_TIME / 60.0)
+                transfer_time_hub
                 )
             total_distance = src_to_hub['distance'] + hub_to_dst['distance']
             total_cost = src_to_hub['monetary_cost'] + hub_to_dst['monetary_cost']
@@ -258,9 +241,11 @@ class HubAnalyzer:
                 'hub_name': hub_info.get('name', ''),
                 'hub_city': hub_info.get('city', ''),
                 'hub_country': hub_info.get('country', ''),
+                'is_international_transfer': is_international,
                 'total_time': round(total_time, 2),
                 'total_distance': round(total_distance, 2),
                 'total_cost': round(total_cost, 2),
+                'transfer_time': round(transfer_time_hub, 2),
                 'segments': [
                     {
                         'from': source,

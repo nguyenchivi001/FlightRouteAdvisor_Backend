@@ -174,22 +174,6 @@ async def find_route(request: RouteRequest):
             detail=f"No route found from {source} to {destination}"
         )
     
-    # Add airport details to path
-    path_with_details = []
-    for iata in route['path']:
-        airport = data_loader.get_airport_by_iata(iata)
-        if airport:
-            path_with_details.append({
-                'iata': iata,
-                'name': airport['name'],
-                'city': airport['city'],
-                'country': airport['country'],
-                'latitude': airport['latitude'],
-                'longitude': airport['longitude']
-            })
-    
-    route['path_details'] = path_with_details
-    
     return route
 
 @app.post("/routes/alternatives")
@@ -220,22 +204,6 @@ async def find_alternative_routes(request: RouteRequest):
             status_code=404,
             detail=f"No routes found from {source} to {destination}"
         )
-    
-    # Add airport details to each route
-    for route in routes:
-        path_with_details = []
-        for iata in route['path']:
-            airport = data_loader.get_airport_by_iata(iata)
-            if airport:
-                path_with_details.append({
-                    'iata': iata,
-                    'name': airport['name'],
-                    'city': airport['city'],
-                    'country': airport['country'],
-                    'latitude': airport['latitude'],
-                    'longitude': airport['longitude']
-                })
-        route['path_details'] = path_with_details
     
     return {
         "source": source,
