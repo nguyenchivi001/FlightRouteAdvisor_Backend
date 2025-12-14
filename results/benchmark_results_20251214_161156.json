@@ -1,0 +1,204 @@
+{
+    "Performance": {
+        "build_time_s": 55.0384,
+        "memory_used_mb": 40.29,
+        "num_nodes": 6072,
+        "num_edges": 37042
+    },
+    "Config": {
+        "num_benchmarks": 200,
+        "lwcc_size": 3231,
+        "base_dir": "C:\\Users\\Admin\\Desktop\\IS353_MangXH\\FlightRouteAdvisor\\backend"
+    },
+    "Latency_Dijkstra_Distance": {
+        "latency_ms": 9.307,
+        "throughput_qps": 107.45,
+        "success_rate": 0.99,
+        "successful_queries": 198
+    },
+    "Latency_AStar_Distance": {
+        "latency_ms": 56.4326,
+        "throughput_qps": 17.72,
+        "success_rate": 0.99,
+        "successful_queries": 198
+    },
+    "Latency_Dijkstra_Unweighted": {
+        "latency_ms": 0.031,
+        "throughput_qps": 32292.79,
+        "success_rate": 0.99,
+        "successful_queries": 198
+    },
+    "AStar_Comparison": {
+        "source": "PDS",
+        "target": "MAF",
+        "Dijkstra": {
+            "path_exists": true,
+            "path_length": 4,
+            "nodes_searched": 3036.0,
+            "time_ms": 0.9876
+        },
+        "AStar": {
+            "path_exists": true,
+            "path_length": 4,
+            "nodes_searched": 3036.0,
+            "time_ms": 20.597
+        }
+    },
+    "Robustness_Baseline": {
+        "hubs_removed_count": 20,
+        "num_components_before": 2822,
+        "num_components_after": 2938,
+        "lwcc_size_before": 3231,
+        "lwcc_size_after": 2964,
+        "reduction_percent": 8.26
+    },
+    "Hub_Removal_Analysis": {
+        "removed_hubs": [
+            "KEF",
+            "PEK",
+            "SEA",
+            "ANC",
+            "IST"
+        ],
+        "original_path": {
+            "path": [
+                "SRQ",
+                "ATL",
+                "MSP",
+                "ANC",
+                "OME",
+                "TLA"
+            ],
+            "segments": [
+                {
+                    "from": "SRQ",
+                    "to": "ATL",
+                    "distance": 714.87,
+                    "time": 0.89,
+                    "cost": 71.49
+                },
+                {
+                    "from": "ATL",
+                    "to": "MSP",
+                    "distance": 1459.0,
+                    "time": 1.82,
+                    "cost": 145.9
+                },
+                {
+                    "from": "MSP",
+                    "to": "ANC",
+                    "distance": 4053.08,
+                    "time": 5.07,
+                    "cost": 405.31
+                },
+                {
+                    "from": "ANC",
+                    "to": "OME",
+                    "distance": 867.58,
+                    "time": 1.08,
+                    "cost": 86.76
+                },
+                {
+                    "from": "OME",
+                    "to": "TLA",
+                    "distance": 91.58,
+                    "time": 0.11,
+                    "cost": 9.16
+                }
+            ],
+            "stops": 4,
+            "total_distance": 7186.11,
+            "total_flight_time": 8.98,
+            "total_transfer_time": 6.0,
+            "total_time": 14.98,
+            "total_cost": 918.61,
+            "path_details": [
+                {
+                    "iata": "SRQ",
+                    "name": "Sarasota Bradenton International Airport",
+                    "city": "Sarasota",
+                    "country": "United States",
+                    "latitude": 27.39539909362793,
+                    "longitude": -82.55439758300781,
+                    "is_start": true,
+                    "is_end": false,
+                    "transfer": null
+                },
+                {
+                    "iata": "ATL",
+                    "name": "Hartsfield Jackson Atlanta International Airport",
+                    "city": "Atlanta",
+                    "country": "United States",
+                    "latitude": 33.6367,
+                    "longitude": -84.428101,
+                    "is_start": false,
+                    "is_end": false,
+                    "transfer": {
+                        "time": 1.5,
+                        "is_international": false,
+                        "transfer_cost": 50.0
+                    }
+                },
+                {
+                    "iata": "MSP",
+                    "name": "Minneapolis-St Paul International/Wold-Chamberlain Airport",
+                    "city": "Minneapolis",
+                    "country": "United States",
+                    "latitude": 44.882,
+                    "longitude": -93.221802,
+                    "is_start": false,
+                    "is_end": false,
+                    "transfer": {
+                        "time": 1.5,
+                        "is_international": false,
+                        "transfer_cost": 50.0
+                    }
+                },
+                {
+                    "iata": "ANC",
+                    "name": "Ted Stevens Anchorage International Airport",
+                    "city": "Anchorage",
+                    "country": "United States",
+                    "latitude": 61.17440032958984,
+                    "longitude": -149.99600219726562,
+                    "is_start": false,
+                    "is_end": false,
+                    "transfer": {
+                        "time": 1.5,
+                        "is_international": false,
+                        "transfer_cost": 50.0
+                    }
+                },
+                {
+                    "iata": "OME",
+                    "name": "Nome Airport",
+                    "city": "Nome",
+                    "country": "United States",
+                    "latitude": 64.51219940185547,
+                    "longitude": -165.44500732421875,
+                    "is_start": false,
+                    "is_end": false,
+                    "transfer": {
+                        "time": 1.5,
+                        "is_international": false,
+                        "transfer_cost": 50.0
+                    }
+                },
+                {
+                    "iata": "TLA",
+                    "name": "Teller Airport",
+                    "city": "Teller",
+                    "country": "United States",
+                    "latitude": 65.2404022217,
+                    "longitude": -166.339004517,
+                    "is_start": false,
+                    "is_end": true,
+                    "transfer": null
+                }
+            ]
+        },
+        "alternative_path": null,
+        "path_exists": false
+    },
+    "Total_Runtime": "0:06:33.202604"
+}
