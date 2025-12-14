@@ -114,7 +114,19 @@ class DataLoader:
         if airport.empty:
             return None
         
-        return airport.iloc[0].to_dict()
+        return self._sanitize_airport_record(airport.iloc[0].to_dict())
+
+    def _sanitize_airport_record(self, record: Dict) -> Dict:
+        """Replace NaN/inf with None to make JSON-serializable"""
+        cleaned = {}
+        for k, v in record.items():
+            if pd.isna(v):
+                cleaned[k] = None
+            elif isinstance(v, float) and (v != v or v == float('inf') or v == float('-inf')):
+                cleaned[k] = None
+            else:
+                cleaned[k] = v
+        return cleaned
     
     def search_airports(self, query: str, limit: int = 20) -> List[Dict]:
         """
@@ -141,4 +153,7 @@ class DataLoader:
         )
         
         results = self.airports_df[mask].head(limit)
-        return results.to_dict('records')
+        return [
+            self._sanitize_airport_record(rec)
+            for rec in results.to_dict('records')
+        ]

@@ -160,6 +160,66 @@ class FlightGraph:
         
         except nx.NetworkXNoPath:
             return None
+
+    def _heuristic(self, current: str, target: str, cost_type: str) -> float:
+        """
+        Heuristic for A* based on great-circle distance between nodes.
+        Returns estimated remaining cost in the same unit as cost_type.
+        """
+        curr_node = self.graph.nodes[current]
+        tgt_node = self.graph.nodes[target]
+
+        curr_lat, curr_lon = curr_node.get('latitude'), curr_node.get('longitude')
+        tgt_lat, tgt_lon = tgt_node.get('latitude'), tgt_node.get('longitude')
+
+        if curr_lat is None or curr_lon is None or tgt_lat is None or tgt_lon is None:
+            return 0.0
+
+        dist = self._calculate_distance(curr_lat, curr_lon, tgt_lat, tgt_lon)
+
+        if cost_type == 'distance':
+            return dist
+        if cost_type == 'cost':
+            return dist * Config.BASE_COST_PER_KM
+        # time heuristic assumes 800 km/h
+        return dist / 800.0
+
+    def find_shortest_path_astar(
+        self,
+        source: str,
+        target: str,
+        cost_type: str = 'time',
+        max_stops: Optional[int] = None
+    ) -> Optional[Dict]:
+        """
+        Find shortest path using A* search with a geodesic heuristic.
+        """
+        if source not in self.graph or target not in self.graph:
+            return None
+
+        weight_map = {
+            'time': 'time_cost',
+            'distance': 'distance',
+            'cost': 'monetary_cost'
+        }
+        weight = weight_map.get(cost_type, 'time_cost')
+
+        try:
+            path = nx.astar_path(
+                self.graph,
+                source,
+                target,
+                heuristic=lambda u, v: self._heuristic(u, v, cost_type),
+                weight=weight
+            )
+
+            num_stops = len(path) - 2
+            if max_stops is not None and num_stops > max_stops:
+                return None
+
+            return self._calculate_path_metrics(path)
+        except nx.NetworkXNoPath:
+            return None
     
     def _fast_search_max_1_stop(
             self, 
@@ -230,9 +290,25 @@ class FlightGraph:
             max_allowed_stops = max_stops
         
         max_path_length = max_allowed_stops + 2
+
+        # Quick reachability check: if the shortest path already exceeds limit, skip
+        try:
+            shortest = nx.shortest_path(
+                self.graph,
+                source,
+                target,
+                weight=weight_attribute
+            )
+            if len(shortest) > max_path_length:
+                return []
+        except nx.NetworkXNoPath:
+            return []
         
         try:
-            for path in nx.shortest_simple_paths(self.graph, source, target, weight=weight_attribute):
+            max_iterations = 20000  # guardrail to avoid runaway enumeration
+            for idx, path in enumerate(nx.shortest_simple_paths(self.graph, source, target, weight=weight_attribute)):
+                if idx > max_iterations:
+                    break
                 
                 num_stops = len(path) - 2
 
@@ -297,12 +373,15 @@ class FlightGraph:
                         is_international = True
                 
                 single_transfer_time = self.get_transfer_time(hub_iata, is_international=is_international)
+                single_transfer_cost = Config.TRANSFER_FEE_PER_STOP
             
                 transfer_time += single_transfer_time
+                total_cost += single_transfer_cost
 
                 transfer_details[hub_iata] = {
                     'time': round(single_transfer_time, 2),
-                    'is_international': is_international
+                    'is_international': is_international,
+                    'transfer_cost': round(single_transfer_cost, 2)
                 }
         
         path_with_details = []

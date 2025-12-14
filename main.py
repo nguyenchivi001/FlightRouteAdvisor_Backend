@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field
 from typing import List, Optional
 import uvicorn
 from pathlib import Path
+from time import perf_counter
 
 from config import Config
 from app.services.data_loader import DataLoader
@@ -58,6 +59,10 @@ class AlternativeHubsRequest(BaseModel):
     destination: str = Field(..., min_length=3, max_length=3)
     primary_hub: str = Field(..., description="Primary hub to avoid", min_length=3, max_length=3)
     top_k: int = Field(5, description="Number of alternatives", ge=1, le=20)
+
+class AlgorithmCompareRequest(RouteRequest):
+    """Reuse RouteRequest fields; used for timing comparisons."""
+    pass
 
 @app.on_event("startup")
 async def startup_event():
@@ -313,6 +318,64 @@ async def get_graph_stats():
     """Get graph statistics"""
     stats = flight_graph.get_graph_stats()
     return stats
+
+@app.post("/routes/compare-algorithms")
+async def compare_algorithms(request: AlgorithmCompareRequest):
+    """
+    Compare runtime between the default Dijkstra search and A* search.
+    Returns timings (ms) and paths for both.
+    """
+    source = request.source.upper()
+    destination = request.destination.upper()
+
+    if source not in flight_graph.graph:
+        raise HTTPException(status_code=404, detail=f"Source airport {source} not found")
+
+    if destination not in flight_graph.graph:
+        raise HTTPException(status_code=404, detail=f"Destination airport {destination} not found")
+
+    if source == destination:
+        raise HTTPException(status_code=400, detail="Source and destination cannot be the same")
+
+    results = []
+
+    t0 = perf_counter()
+    dijkstra_route = flight_graph.find_shortest_path(
+        source,
+        destination,
+        cost_type=request.cost_type,
+        max_stops=request.max_stops
+    )
+    t1 = perf_counter()
+    results.append({
+        "name": "dijkstra",
+        "elapsed_ms": round((t1 - t0) * 1000, 3),
+        "found": dijkstra_route is not None,
+        "route": dijkstra_route
+    })
+
+    t2 = perf_counter()
+    astar_route = flight_graph.find_shortest_path_astar(
+        source,
+        destination,
+        cost_type=request.cost_type,
+        max_stops=request.max_stops
+    )
+    t3 = perf_counter()
+    results.append({
+        "name": "astar",
+        "elapsed_ms": round((t3 - t2) * 1000, 3),
+        "found": astar_route is not None,
+        "route": astar_route
+    })
+
+    return {
+        "source": source,
+        "destination": destination,
+        "cost_type": request.cost_type,
+        "max_stops": request.max_stops,
+        "results": results
+    }
 
 @app.get("/health")
 async def health_check():
