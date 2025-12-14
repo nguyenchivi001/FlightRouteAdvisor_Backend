@@ -21,7 +21,7 @@ class Config:
     
     # Flight cost parameters
     BASE_COST_PER_KM: float = 0.1
-    TRANSFER_COST_MULTIPLIER: float = 1.5
+    TRANSFER_FEE_PER_STOP: float = 50.0
     
     # Graph analysis parameters
     MAX_STOPS: int = 3
