@@ -6,6 +6,11 @@
 **Môn học**: IS353 - Mạng Xã Hội  
 **Mô tả**: Backend API sử dụng lý thuyết đồ thị để tìm kiếm và phân tích tuyến bay
 
+## Giảng viên hướng dẫn
+
+- **Tên**: Thầy Trần Hưng Nghiệp
+- **Email**: nghiepth@uit.edu.vn
+
 ## Thành viên nhóm
 
 - Nguyễn Chí Vĩ - 22521656
@@ -419,4 +424,4 @@ Dự án này được phát triển cho mục đích học tập - IS353 Mạng
 ## Liên hệ
 
 Nếu có vấn đề hoặc câu hỏi, vui lòng liên hệ:
-- **Thanh viên nhóm thực hiện: Dương Văn Súa** (Backend Developer): 22521267@gm.uit.edu.vn
+- **Thành viên nhóm thực hiện: Dương Văn Súa** (Backend Developer): 22521267@gm.uit.edu.vn
